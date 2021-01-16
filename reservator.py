@@ -80,14 +80,14 @@ def check_availability(driver, horarios_preferidos, dias_preferidos, profes_pref
     hora_inicio = driver.find_element_by_name('start_hour')
     horas = hora_inicio.find_elements_by_tag_name('option')
     for hora in horas:
-        if(hora.get_attribute("value") == '19'):
+        if(hora.get_attribute("value") == '20'):
             hora.click()
             break
 
     min_inicio = driver.find_element_by_name('start_minute')
     mins = min_inicio.find_elements_by_tag_name('option')
     for min in mins:
-        if(min.get_attribute("value") == '30'):
+        if(min.get_attribute("value") == '00'):
             min.click()
             break
 
@@ -108,7 +108,8 @@ def check_availability(driver, horarios_preferidos, dias_preferidos, profes_pref
         link_dia.click()
         time.sleep(2)
         for profe in profes_preferidos:
-            nueva_busqueda, reservas_max_dia = reserva(driver, profe, horarios_preferidos, reservas_max_dia)
+            if(reservas_max_dia):
+                nueva_busqueda, reservas_max_dia = reserva(driver, profe, horarios_preferidos, reservas_max_dia)
             if(nueva_busqueda):
                 check_availability(driver, horarios_preferidos, dias_preferidos, profes_preferidos, reservas_max_dia, dias_reservados)
         dias_reservados.append(dia)
@@ -118,7 +119,7 @@ def make_screenshot(driver):
     ob.full_Screenshot(driver, save_path=r'.', image_name='screenshoot.png') 
 
 def main():
-    horarios_preferidos = ('19:30', '20:00', '20:30', '21:00', '21:30', '22:00', '22:30')
+    horarios_preferidos = ('20:00', '20:30', '21:00', '21:30', '22:00', '22:30')
     dias_preferidos = ('Tue', 'Thu')
     reservas_max_dia = 2
     url_hannah = "https://www.fitslanguage.com/teacher/view/2874"
