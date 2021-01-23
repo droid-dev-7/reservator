@@ -1,5 +1,7 @@
 on: [push]
-
+  workflow_dispatch:
+  
+  
 jobs:
   check-quality:
     runs-on: ubuntu-latest
