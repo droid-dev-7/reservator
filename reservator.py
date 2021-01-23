@@ -101,7 +101,7 @@ def filtro_dias_clase(driver, dias_preferidos, dias_reservados):
     dias_reserva_links = list()
     for dia in dias_preferidos:
         dias_reserva_links += driver.find_elements_by_partial_link_text(dia)
-    dias_reserva_text = [dia.text for dia in dias_reserva_links if dia.text not in dias_reservados]
+    dias_reserva_text = [dia.text for dia in dias_reserva_links if dia.text[4:6] not in dias_reservados]
 
     return driver, dias_reserva_text
 
@@ -109,24 +109,25 @@ def check_availability(driver, horarios_preferidos, dias_preferidos, profes_pref
     sleep(1)
     driver.get('https://www.fitslanguage.com/lessons/search')
 
-    if(dias_reservados is None):
-        dias_reservados = list()
     driver = filtro_hora(driver)
     driver, dias_reserva = filtro_dias_clase(driver, dias_preferidos, dias_reservados)
 
     logging.info(dias_reserva)
     for dia in dias_reserva:
-        link_dia = driver.find_element_by_partial_link_text(dia)
-        logging.info("Reserva para el dia "+ link_dia.text)
-        link_dia.click()
-        sleep(1)
-        for profe in profes_preferidos:
-            if(reservas_max_dia):
-                nueva_busqueda, reservas_max_dia = reserva(driver, profe, horarios_preferidos, reservas_max_dia)
-            if(nueva_busqueda):
-                contador_reservas += 1
-                check_availability(driver, horarios_preferidos, dias_preferidos, profes_preferidos, reservas_max_dia, dias_reservados, contador_reservas)
-        dias_reservados.append(dia)
+        link_dias = driver.find_elements_by_partial_link_text(dia)
+        for link_dia in link_dias:
+            if(link_dia.text[4:] is not dia[4:]):
+                continue
+            logging.info("Reserva para el dia "+ link_dia.text)
+            link_dia.click()
+            sleep(1)
+            for profe in profes_preferidos:
+                if(reservas_max_dia):
+                    nueva_busqueda, reservas_max_dia = reserva(driver, profe, horarios_preferidos, reservas_max_dia)
+                if(nueva_busqueda):
+                    contador_reservas += 1
+                    check_availability(driver, horarios_preferidos, dias_preferidos, profes_preferidos, reservas_max_dia, dias_reservados, contador_reservas)
+            dias_reservados.append(dia)
 
     return contador_reservas
     
@@ -146,6 +147,15 @@ def make_screenshot(driver):
     crop_img.save('reservas.png') 
     driver.quit() 
 
+def find_reserved_days(driver):
+    dias_reservados = list()
+    tabla_reservas = driver.find_element_by_class_name("ui.icon.warning.message")
+    filas_dias_reservados = tabla_reservas.find_elements_by_tag_name('li')
+    for dia in filas_dias_reservados:
+        if dia.text[4:6] not in dias_reservados:
+            dias_reservados.append(dia.text[4:6])
+    print(dias_reservados)
+    return driver, dias_reservados
 
 def main():
     horarios_preferidos = ('20:00', '20:30', '21:00', '21:30', '22:00', '22:30')
@@ -157,7 +167,9 @@ def main():
 
     driver = webdriver.Chrome(executable_path=r'D:\chromedriver_win32\chromedriver.exe')
     driver = login(driver)
-    numero_reservas = check_availability(driver, horarios_preferidos, dias_preferidos, profes_preferidos, reservas_max_dia)
+    sleep(2)
+    driver , dias_reservados = find_reserved_days(driver)
+    numero_reservas = check_availability(driver, horarios_preferidos, dias_preferidos, profes_preferidos, reservas_max_dia, dias_reservados)
 
     mensaje_correo = "Se han reservado "+ str(numero_reservas) + " clases"
     logging.info(mensaje_correo)
