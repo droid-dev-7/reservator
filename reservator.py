@@ -8,9 +8,14 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 import logging
+import logging.handlers
 from PIL import Image 
 
+log_file_name = 'reservator.log'
 logging.basicConfig(level=logging.INFO)
+handler = logging.handlers.TimedRotatingFileHandler(log_file_name, when="D", interval=1, backupCount=2)
+logger = logging.getLogger() # or pass string to give it a name
+logger.addHandler(handler)
 
 def send_mail(message):
     port = 465  # For SSL
